@@ -1,4 +1,5 @@
 import os
+
 from hw2_functions import *
 
 
@@ -9,8 +10,8 @@ def main():
     images_dir = 'FaceImages'
     path_to_image1 = os.path.join(images_dir, img_1_name + img_suffix)
     path_to_image2 = os.path.join(images_dir, img_2_name + img_suffix)
-    img1 = cv2.imread(path_to_image1)
-    img2 = cv2.imread(path_to_image2)
+    img1 = cv2.cvtColor(cv2.imread(path_to_image1), cv2.COLOR_BGR2GRAY)
+    img2 = cv2.cvtColor(cv2.imread(path_to_image2), cv2.COLOR_BGR2GRAY)
 
     print("Start running script  ------------------------------------\n")
     print_IDs()
@@ -22,30 +23,15 @@ def main():
 
     path_to_points1 = os.path.join(points_dir, img_1_name + '_Points.npy')
     path_to_points2 = os.path.join(points_dir, img_2_name + '_Points.npy')
-    # getImagePts(img1, img2, path_to_points1, path_to_points2, nPoints=4)
+    # getImagePts(img1, img2, path_to_points1, path_to_points2, nPoints=12)
 
-    point_set1 = np.load(path_to_points1)
-    point_set2 = np.load(path_to_points2)
-    findAffineTransform(point_set1, point_set2)
-    z = 3
+    point_set1 = np.load(path_to_points1).astype(int)
+    point_set2 = np.load(path_to_points2).astype(int)
+
+    nu_of_frames = 10
+    seq = createMorphSequence(img1, point_set1, img2, point_set2, np.linspace(0, 1, nu_of_frames), 1)
+    writeMorphingVideo(seq, 'outputVideo')
 
 
 if __name__ == '__main__':
-    a = np.array(
-        [[1, 2], [3, 4], [5, 6]]
-    )
-    b = np.array(
-        [[7, 8], [9, 10], [11, 12]]
-    )
-    x_1 = [
-        [1, 2, 0, 0, 1, 0],
-        [0, 0, 1, 2, 0, 1],
-        [3, 4, 0, 0, 1, 0],
-        [0, 0, 3, 4, 0, 1],
-        [5, 6, 0, 0, 1, 0],
-        [0, 0, 5, 6, 0, 1],
-    ]
-
-    x_t_1 = [7, 8, 9, 10, 11, 12]
-
     main()
