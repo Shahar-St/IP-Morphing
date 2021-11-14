@@ -28,8 +28,8 @@ def main():
     point_set1 = np.load(path_to_points1).astype(int)
     point_set2 = np.load(path_to_points2).astype(int)
 
-    nu_of_frames = 200
-    seq = createMorphSequence(img1, point_set1, img2, point_set2, np.linspace(0, 1, nu_of_frames), 1)
+    nu_of_frames = 100
+    seq = createMorphSequence(img1, point_set1, img2, point_set2, np.linspace(0, 1, nu_of_frames), 0)
     writeMorphingVideo(seq, 'outputVideo')
 
 

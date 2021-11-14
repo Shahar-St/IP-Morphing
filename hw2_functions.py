@@ -24,7 +24,7 @@ def createMorphSequence(im1, im1_pts, im2, im2_pts, t_list, transformType):
 
     ims = []
     for t in t_list:
-        T12_t = (1 - t) * np.eye(3) + (t * T12)
+        T12_t = ((1 - t) * np.eye(3)) + (t * T12)
         T21_t = ((1 - t) * T21) + (t * np.eye(3))
         img1_t = mapImage(im1, T12_t, im1.shape)
         img2_t = mapImage(im2, T21_t, im1.shape)
@@ -40,24 +40,22 @@ def mapImage(im, T, sizeOutIm):
 
     # create meshgrid of all coordinates in new image [x,y]
     xx, yy = np.meshgrid(np.arange(sizeOutIm[0]), np.arange(sizeOutIm[1]))
-    xx = xx.reshape(-1)
-    yy = yy.reshape(-1)
+
     # add homogenous coord [x,y,1]
-    target_coords = np.vstack((xx, yy, np.ones(xx.size))).T
+    target_coords = np.vstack((xx.reshape(-1), yy.reshape(-1), np.ones(xx.size)))
 
     # calculate source coordinates that correspond to [x,y,1] in new image
-    source_coords = np.matmul(np.linalg.inv(T), target_coords.T).T
+    source_coords = np.matmul(np.linalg.inv(T), target_coords)
 
     # todo not sure if needed
-    source_coords.T[0] = source_coords.T[0] / source_coords.T[2]
-    source_coords.T[1] = source_coords.T[1] / source_coords.T[2]
+    source_coords[0] = source_coords[0] / source_coords[2]
+    source_coords[1] = source_coords[1] / source_coords[2]
 
     # find coordinates outside range and delete (in source and target)
-    out_of_range_indices = np.any((source_coords >= sizeOutIm[0] - 1) | (source_coords < 0), axis=1)
-    source_coords = np.delete(source_coords, out_of_range_indices, axis=0)
-    target_coords = np.delete(target_coords, out_of_range_indices, axis=0)
+    out_of_range_indices = np.any((source_coords >= sizeOutIm[0] - 1) | (source_coords < 0), axis=0)
+    source_coords = np.delete(source_coords, out_of_range_indices, axis=1)
+    target_coords = np.delete(target_coords, out_of_range_indices, axis=1)
 
-    source_coords = source_coords.T
     ceil_points = np.ceil(source_coords).astype(np.int)
     floor_points = np.floor(source_coords).astype(np.int)
     NE, NW, SE, SW = im[ceil_points[0], ceil_points[1]], im[floor_points[0], ceil_points[1]], im[
@@ -68,7 +66,7 @@ def mapImage(im, T, sizeOutIm):
     N = (NE * delta_x) + (NW * (1 - delta_x))
     V = (N * delta_y) + (S * (1 - delta_y))
 
-    new_im[target_coords.T[0].astype(int), target_coords.T[1].astype(int)] = V
+    new_im[target_coords[0].astype(int), target_coords[1].astype(int)] = V
     return new_im
 
 
@@ -120,10 +118,10 @@ def findAffineTransform(pointsSet1, pointsSet2):
 
 def getImagePts(im1, im2, varName1, varName2, nPoints):
     plt.imshow(im1, cmap='gray')
-    imagePts1 = np.round(plt.ginput(n=nPoints, timeout=0))
+    imagePts1 = plt.ginput(n=nPoints, timeout=0)
 
     plt.imshow(im2, cmap='gray')
-    imagePts2 = np.round(plt.ginput(n=nPoints, timeout=0))
+    imagePts2 = plt.ginput(n=nPoints, timeout=0)
 
     np.save(varName1, imagePts1)
     np.save(varName2, imagePts2)
