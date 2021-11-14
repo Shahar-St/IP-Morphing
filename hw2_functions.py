@@ -30,10 +30,7 @@ def createMorphSequence(im1, im1_pts, im2, im2_pts, t_list, transformType):
         img2_t = mapImage(im2, T21_t, im1.shape)
         # cross-dissolve
         nim = ((1 - t) * img1_t) + (t * img2_t)
-        # todo - it shows it works
-        plt.imshow(nim, cmap='gray')
-        plt.show()
-        ims.append(nim.astype(int))
+        ims.append(nim.astype(np.uint8))
 
     return ims
 
@@ -46,22 +43,32 @@ def mapImage(im, T, sizeOutIm):
     xx = xx.reshape(-1)
     yy = yy.reshape(-1)
     # add homogenous coord [x,y,1]
-    target_coords = np.vstack((xx, yy, np.ones(xx.size, dtype=int))).T
+    target_coords = np.vstack((xx, yy, np.ones(xx.size))).T
 
     # calculate source coordinates that correspond to [x,y,1] in new image
     source_coords = np.matmul(np.linalg.inv(T), target_coords.T).T
 
+    # todo not sure if needed
+    source_coords.T[0] = source_coords.T[0] / source_coords.T[2]
+    source_coords.T[1] = source_coords.T[1] / source_coords.T[2]
+
     # find coordinates outside range and delete (in source and target)
-    source_coords = np.round(source_coords)
-    out_of_range_indices = np.any((source_coords >= sizeOutIm[0]) | (source_coords < 0), axis=1)
+    out_of_range_indices = np.any((source_coords >= sizeOutIm[0] - 1) | (source_coords < 0), axis=1)
     source_coords = np.delete(source_coords, out_of_range_indices, axis=0)
     target_coords = np.delete(target_coords, out_of_range_indices, axis=0)
 
-    # interpolate - bilinear
+    source_coords = source_coords.T
+    ceil_points = np.ceil(source_coords).astype(np.int)
+    floor_points = np.floor(source_coords).astype(np.int)
+    NE, NW, SE, SW = im[ceil_points[0], ceil_points[1]], im[floor_points[0], ceil_points[1]], im[
+        ceil_points[0], floor_points[1]], im[floor_points[0], floor_points[1]]
+    delta_x = source_coords[0] - floor_points[0]
+    delta_y = source_coords[1] - floor_points[1]
+    S = (SE * delta_x) + (SW * (1 - delta_x))
+    N = (NE * delta_x) + (NW * (1 - delta_x))
+    V = (N * delta_y) + (S * (1 - delta_y))
 
-    # apply corresponding coordinates
-    new_im[target_coords] = im[source_coords.astype(int)]
-
+    new_im[target_coords.T[0].astype(int), target_coords.T[1].astype(int)] = V
     return new_im
 
 
@@ -75,15 +82,15 @@ def findProjectiveTransform(pointsSet1, pointsSet2):
         y_point = pointsSet1[i][1]
         x_t_point = pointsSet2[i][0]
         y_t_point = pointsSet2[i][1]
-        x.append([x_point, y_point, 0, 0, 1, 0, - x_point * x_t_point, -y_point * x_t_point])
-        x.append([0, 0, x_point, y_point, 0, 1, - x_point * y_t_point, - y_point * y_t_point])
+        x.append([x_point, y_point, 0, 0, 1, 0, -1 * x_point * x_t_point, -1 * y_point * x_t_point])
+        x.append([0, 0, x_point, y_point, 0, 1, -1 * x_point * y_t_point, -1 * y_point * y_t_point])
 
     x_t = pointsSet2.reshape(N * 2)
     T = np.matmul(np.linalg.pinv(x), x_t)
     T = np.array([
         [T[0], T[1], T[4]],
         [T[2], T[3], T[5]],
-        [T[6], T[1], 1]
+        [T[6], T[7], 1]
     ])
 
     return T
