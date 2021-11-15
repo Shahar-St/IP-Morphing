@@ -4,7 +4,7 @@ from hw2_functions import *
 
 
 def main():
-    img_1_name = 'Face1'
+    img_1_name = 'Face5'
     img_2_name = 'Face6'
     img_suffix = '.tif'
     images_dir = 'FaceImages'
@@ -29,7 +29,7 @@ def main():
     point_set2 = np.load(path_to_points2).astype(int)
 
     nu_of_frames = 100
-    seq = createMorphSequence(img1, point_set1, img2, point_set2, np.linspace(0, 1, nu_of_frames), 0)
+    seq = createMorphSequence(img1, point_set1, img2, point_set2, np.linspace(0, 1, nu_of_frames), 1)
     writeMorphingVideo(seq, 'outputVideo')
 
 

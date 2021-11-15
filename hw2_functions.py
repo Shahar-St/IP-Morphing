@@ -47,9 +47,8 @@ def mapImage(im, T, sizeOutIm):
     # calculate source coordinates that correspond to [x,y,1] in new image
     source_coords = np.matmul(np.linalg.inv(T), target_coords)
 
-    # todo not sure if needed
-    source_coords[0] = source_coords[0] / source_coords[2]
-    source_coords[1] = source_coords[1] / source_coords[2]
+    # normalize back to 2D
+    source_coords = source_coords / source_coords[2]
 
     # find coordinates outside range and delete (in source and target)
     out_of_range_indices = np.any((source_coords >= sizeOutIm[0] - 1) | (source_coords < 0), axis=0)
@@ -118,10 +117,12 @@ def findAffineTransform(pointsSet1, pointsSet2):
 
 def getImagePts(im1, im2, varName1, varName2, nPoints):
     plt.imshow(im1, cmap='gray')
-    imagePts1 = plt.ginput(n=nPoints, timeout=0)
+    imagePts1 = np.array(plt.ginput(n=nPoints, timeout=0))
+    imagePts1[:, 0], imagePts1[:, 1] = imagePts1[:, 1].copy(), imagePts1[:, 0].copy()
 
     plt.imshow(im2, cmap='gray')
-    imagePts2 = plt.ginput(n=nPoints, timeout=0)
+    imagePts2 = np.array(plt.ginput(n=nPoints, timeout=0))
+    imagePts2[:, 0], imagePts2[:, 1] = imagePts2[:, 1].copy(), imagePts2[:, 0].copy()
 
     np.save(varName1, imagePts1)
     np.save(varName2, imagePts2)
