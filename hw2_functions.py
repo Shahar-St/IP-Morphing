@@ -18,7 +18,7 @@ def createMorphSequence(im1, im1_pts, im2, im2_pts, t_list, transformType):
     if transformType:  # projective
         T12 = findProjectiveTransform(im1_pts, im2_pts)
         T21 = findProjectiveTransform(im2_pts, im1_pts)
-    else:
+    else:  # affine
         T12 = findAffineTransform(im1_pts, im2_pts)
         T21 = findAffineTransform(im2_pts, im1_pts)
 
@@ -26,7 +26,7 @@ def createMorphSequence(im1, im1_pts, im2, im2_pts, t_list, transformType):
     for t in t_list:
         T12_t = ((1 - t) * np.eye(3)) + (t * T12)
         T21_t = ((1 - t) * T21) + (t * np.eye(3))
-        img1_t = mapImage(im1, T12_t, im1.shape)
+        img1_t = mapImage(im1, T12_t, im2.shape)
         img2_t = mapImage(im2, T21_t, im1.shape)
         # cross-dissolve
         nim = ((1 - t) * img1_t) + (t * img2_t)
@@ -51,10 +51,13 @@ def mapImage(im, T, sizeOutIm):
     source_coords = source_coords / source_coords[2]
 
     # find coordinates outside range and delete (in source and target)
-    out_of_range_indices = np.any((source_coords >= sizeOutIm[0] - 1) | (source_coords < 0), axis=0)
+
+    # todo cols and rows
+    out_of_range_indices = np.any((source_coords > sizeOutIm[0] - 1) | (source_coords < 0), axis=0)
     source_coords = np.delete(source_coords, out_of_range_indices, axis=1)
     target_coords = np.delete(target_coords, out_of_range_indices, axis=1)
 
+    # interpolate - bilinear
     ceil_points = np.ceil(source_coords).astype(np.int)
     floor_points = np.floor(source_coords).astype(np.int)
     NE, NW, SE, SW = im[ceil_points[0], ceil_points[1]], im[floor_points[0], ceil_points[1]], im[
@@ -115,13 +118,17 @@ def findAffineTransform(pointsSet1, pointsSet2):
     return T
 
 
+# todo 3-D
 def getImagePts(im1, im2, varName1, varName2, nPoints):
     plt.imshow(im1, cmap='gray')
     imagePts1 = np.array(plt.ginput(n=nPoints, timeout=0))
+    imagePts1 = np.round(imagePts1).astype(int)
+
     imagePts1[:, 0], imagePts1[:, 1] = imagePts1[:, 1].copy(), imagePts1[:, 0].copy()
 
     plt.imshow(im2, cmap='gray')
     imagePts2 = np.array(plt.ginput(n=nPoints, timeout=0))
+    imagePts2 = np.round(imagePts2).astype(int)
     imagePts2[:, 0], imagePts2[:, 1] = imagePts2[:, 1].copy(), imagePts2[:, 0].copy()
 
     np.save(varName1, imagePts1)
