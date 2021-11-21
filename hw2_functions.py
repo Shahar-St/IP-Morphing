@@ -99,6 +99,10 @@ def findProjectiveTransform(pointsSet1, pointsSet2):
 def findAffineTransform(pointsSet1, pointsSet2):
     N = pointsSet1.shape[0]
 
+    pointsSet1 = np.delete(pointsSet1, 2, 1)
+    pointsSet2 = np.delete(pointsSet2, 2, 1)
+
+
     # iterate over points to create x , x'
     x = []
     for i in range(0, N):
