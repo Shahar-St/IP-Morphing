@@ -52,8 +52,8 @@ def mapImage(im, T, sizeOutIm):
 
     # find coordinates outside range and delete (in source and target)
 
-    # todo cols and rows
-    out_of_range_indices = np.any((source_coords > sizeOutIm[0] - 1) | (source_coords < 0), axis=0)
+    out_of_range_indices = np.any(
+        (source_coords[0] > sizeOutIm[0] - 1) | (source_coords[1] > sizeOutIm[1] - 1) | (source_coords < 0), axis=0)
     source_coords = np.delete(source_coords, out_of_range_indices, axis=1)
     target_coords = np.delete(target_coords, out_of_range_indices, axis=1)
 
@@ -85,7 +85,7 @@ def findProjectiveTransform(pointsSet1, pointsSet2):
         x.append([x_point, y_point, 0, 0, 1, 0, -1 * x_point * x_t_point, -1 * y_point * x_t_point])
         x.append([0, 0, x_point, y_point, 0, 1, -1 * x_point * y_t_point, -1 * y_point * y_t_point])
 
-    x_t = pointsSet2.reshape(N * 2)
+    x_t = pointsSet2[:, 0:2].reshape(N * 2)
     T = np.matmul(np.linalg.pinv(x), x_t)
     T = np.array([
         [T[0], T[1], T[4]],
@@ -118,18 +118,16 @@ def findAffineTransform(pointsSet1, pointsSet2):
     return T
 
 
-# todo 3-D
 def getImagePts(im1, im2, varName1, varName2, nPoints):
-    plt.imshow(im1, cmap='gray')
-    imagePts1 = np.array(plt.ginput(n=nPoints, timeout=0))
-    imagePts1 = np.round(imagePts1).astype(int)
-
-    imagePts1[:, 0], imagePts1[:, 1] = imagePts1[:, 1].copy(), imagePts1[:, 0].copy()
-
-    plt.imshow(im2, cmap='gray')
-    imagePts2 = np.array(plt.ginput(n=nPoints, timeout=0))
-    imagePts2 = np.round(imagePts2).astype(int)
-    imagePts2[:, 0], imagePts2[:, 1] = imagePts2[:, 1].copy(), imagePts2[:, 0].copy()
-
+    imagePts1 = getOneImagePts(im1, nPoints)
+    imagePts2 = getOneImagePts(im2, nPoints)
     np.save(varName1, imagePts1)
     np.save(varName2, imagePts2)
+
+
+def getOneImagePts(im, nPoints):
+    plt.imshow(im, cmap='gray')
+    imagePts = np.array(plt.ginput(n=nPoints, timeout=0))
+    imagePts = np.round(imagePts).astype(int)
+    imagePts[:, 0], imagePts[:, 1] = imagePts[:, 1].copy(), imagePts[:, 0].copy()
+    return np.hstack((imagePts, np.ones((imagePts.shape[0], 1), dtype=int)))
