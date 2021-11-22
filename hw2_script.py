@@ -1,7 +1,5 @@
 import os
 
-import matplotlib.pyplot as plt
-
 from hw2_functions import *
 
 
@@ -42,6 +40,8 @@ def main():
     img_section_B_name_rectangle = 'Rectangle'
     img_section_B_name_trapeze = 'Trapeze'
     dir_section_B = 'Section_B'
+    if not os.path.exists(dir_section_B):
+        os.makedirs(dir_section_B)
 
     path_to_img_section_B_rectangle = os.path.join(dir_section_B, img_section_B_name_rectangle + img_suffix)
     img_section_B_rectangle = cv2.cvtColor(cv2.imread(path_to_img_section_B_rectangle), cv2.COLOR_BGR2GRAY)
@@ -74,12 +74,14 @@ def main():
     plt.imshow(img_by_projective, cmap='gray', vmin=0, vmax=255)
     plt.title("by projective")
     plt.show()
-    plt.clf()
 
 
     print("c - difference between quantity of points ------------------------------------\n")
 
     points_dir_section_C = 'FacePoints_section_C'
+    if not os.path.exists(points_dir_section_C):
+        os.makedirs(points_dir_section_C)
+
     path_to_points1 = os.path.join(points_dir_section_C, img_1_name + '_12_Points.npy')
     path_to_points2 = os.path.join(points_dir_section_C, img_2_name + '_12_Points.npy')
     # getImagePts(img1, img2, path_to_points1, path_to_points2, nPoints=12)
@@ -109,24 +111,24 @@ def main():
     plt.imshow(im_4, cmap='gray', vmin=0, vmax=255)
     plt.title("im with 4 points")
     plt.show()
-    plt.clf()
 
 
     print("c - difference between distribution of the points ------------------------------------\n")
 
     path_to_points1 = os.path.join(points_dir_section_C, img_1_name + '_well_distribution_Points.npy')
     path_to_points2 = os.path.join(points_dir_section_C, img_2_name + '_well_distribution_Points.npy')
-    getImagePts(img1, img2, path_to_points1, path_to_points2, nPoints=12)
+    # getImagePts(img1, img2, path_to_points1, path_to_points2, nPoints=12)
 
     point_well_distribution_set1 = np.load(path_to_points1)
     point_well_distribution_set2 = np.load(path_to_points2)
 
-    seq_well_distribution = createMorphSequence(img1, point_well_distribution_set1, img2, point_well_distribution_set2,
-                                                np.linspace(0, 1, num_of_frames), 1)
+    seq_well_distribution = createMorphSequence(img1, point_well_distribution_set1, img2,
+                                                point_well_distribution_set2, np.linspace(0, 1, num_of_frames), 1)
+
 
     path_to_points1 = os.path.join(points_dir_section_C, img_1_name + '_small_distribution_Points.npy')
     path_to_points2 = os.path.join(points_dir_section_C, img_2_name + '_small_distribution_Points.npy')
-    getImagePts(img1, img2, path_to_points1, path_to_points2, nPoints=12)
+    # getImagePts(img1, img2, path_to_points1, path_to_points2, nPoints=12)
 
     point_small_distribution_set1 = np.load(path_to_points1)
     point_small_distribution_set2 = np.load(path_to_points2)
@@ -145,29 +147,6 @@ def main():
     plt.imshow(im_small_distribution, cmap='gray', vmin=0, vmax=255)
     plt.title("im with small distribution")
     plt.show()
-    plt.clf()
-
-    print("d -------------------------------------\n")
-
-    img_D1_name = 'no_grade'
-    img_D2_name = 'grade_100'
-    img_suffix = '.tif'
-    images_dir = 'Section_D'
-    path_to_imageD1 = os.path.join(images_dir, img_D1_name + img_suffix)
-    path_to_imageD2 = os.path.join(images_dir, img_D2_name + img_suffix)
-    img_D1 = cv2.cvtColor(cv2.imread(path_to_imageD1), cv2.COLOR_BGR2GRAY)
-    img_D2 = cv2.cvtColor(cv2.imread(path_to_imageD2), cv2.COLOR_BGR2GRAY)
-
-    path_to_points1 = os.path.join(images_dir, img_D1_name + '_Points.npy')
-    path_to_points2 = os.path.join(images_dir, img_D2_name + '_Points.npy')
-    getImagePts(img_D1, img_D2, path_to_points1, path_to_points2, nPoints=12)
-
-    point_set1 = np.load(path_to_points1)
-    point_set2 = np.load(path_to_points2)
-
-    num_of_frames = 100
-    seq = createMorphSequence(img_D1, point_set1, img_D2, point_set2, np.linspace(0, 1, num_of_frames), 1)
-    writeMorphingVideo(seq, 'forContest<305237257>_<312162027>')
 
 
 if __name__ == '__main__':
